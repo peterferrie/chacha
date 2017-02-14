@@ -215,6 +215,9 @@ cc20_encryptx:
     pop     rsi
     push    r8               ; rcx = len
     pop     rcx
+%else
+    push    rdx              ; rcx = len 
+    pop     rcx
 %endif
     sub     rsp, 64
     push    rsp
