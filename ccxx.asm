@@ -30,7 +30,8 @@
 ; -----------------------------------------------
 ; ChaCha20 stream cipher in x64 assembly
 ;
-; size: 273 bytes
+; size: 273 bytes for win64
+;       261 bytes for linux (use -DNIX)
 ;
 ; -----------------------------------------------
 

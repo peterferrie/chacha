@@ -43,11 +43,6 @@
       global _cc20_encryptx
     %endif
     
-struc cc20_ctx
-  s    resb 64
-  .size:
-endstruc
-
 ; void cc_setkey(chacha_ctx *ctx, void *key, void *iv)
 _cc20_setkeyx:
 cc20_setkeyx:
