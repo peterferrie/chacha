@@ -30,19 +30,19 @@
 ; -----------------------------------------------
 ; ChaCha20 stream cipher in x86 assembly
 ;
-; size: 241 bytes
+; size: 231 bytes
 ;
 ; global calls use cdecl convention
 ;
 ; -----------------------------------------------
 
     bits 32
-    
+
     %ifndef BIN
       global _cc20_setkeyx
       global _cc20_encryptx
     %endif
-    
+
 ; void cc_setkey(chacha_ctx *ctx, void *key, void *iv)
 _cc20_setkeyx:
 cc20_setkeyx:
@@ -71,7 +71,7 @@ load_iv:
     movsd
     popad
     ret
-    
+
 %define a eax
 %define b edx
 %define c esi
@@ -80,19 +80,19 @@ load_iv:
 
 %define t0 ebp
 
-; void QUARTERROUND(chacha_blk *blk, uint16_t index)
-QUARTERROUND:
+; void chacha_permute(chacha_blk *blk, uint16_t index)
+chacha_permute:
     pushad
     push   a
     xchg   ah, al
     aam    16
-    
+
     movzx  ebp, ah
     movzx  c, al
 
     pop    a
     aam    16
-    
+
     movzx  b, ah
     movzx  a, al
 
@@ -107,7 +107,7 @@ QUARTERROUND:
 q_l1:
     xor    ebx, ebx
 q_l2:
-    ; x[a] = PLUS(x[a],x[b]); 
+    ; x[a] = PLUS(x[a],x[b]);
     add    t0, [a]
     mov    [a], t0
     ; x[d] = ROTATE(XOR(x[d],x[a]),cl);
@@ -123,30 +123,25 @@ q_l2:
     ; --------------------------------------------
     shr    ecx, 16
     jnz    q_l1
-    
+
     popad
     ret
-  
-; void cc_corex (chacha_ctx *ctx, void *in, uint32_t len)
+
+; void cc20_streamx (chacha_ctx *ctx, void *in, uint32_t len)
 ; do not call directly
 ; expects state in ebx, length in eax, input in edx
-_cc20_corex:
-cc20_corex:
+_cc20_streamx:
+cc20_streamx:
     pushad
 
-    ; allocate 64-bytes local space, x
+    ; copy state to edi
     push   64
     pop    ecx
-    sub    esp, ecx
-    
-    ; copy state to x
-    mov    edi, esp
-    mov    esi, ebx
+    mov    ebx, esi
     rep    movsb
 
-    ; move x into edi
-    mov    edi, esp
-    push   eax
+    pop    edi
+    push   edi
     push   20/2  ; 20 rounds
     pop    ebp
 e_l1:
@@ -161,11 +156,11 @@ load_idx:
     mov    cl, 8
 e_l2:
     lodsw
-    call   QUARTERROUND
+    call   chacha_permute
     loop   e_l2
     dec    ebp
     jnz    e_l1
-    
+
     ; add state to x
     mov    cl, 16
 add_state:
@@ -173,46 +168,42 @@ add_state:
     add    [edi+ecx*4-4], eax
     loop   add_state
 
-    ; xor input with x
-    pop    ecx               ; ecx=len
-xor_input:
-    mov    al, byte[edi+ecx-1]
-    xor    byte[edx+ecx-1], al
-    loop   xor_input
-    
     ; update block counter
     stc
     adc    dword[ebx+12*4], ecx
     adc    dword[ebx+13*4], ecx
-    
-    ; free stack
-    popad
-    popad
+
     ; restore registers
     popad
     ret
-    
+
 _cc20_encryptx:
 cc20_encryptx:
     pushad
-    lea    esi, [esp+32+4]
+    lea     esi, [esp+32+4]
     lodsd
-    xchg   ebx, eax
+    xchg    ecx, eax          ; ecx = length
     lodsd
-    xchg   edx, eax
+    xchg    ebx, eax          ; ebx = buf
     lodsd
-    xchg   ecx, eax
-    jecxz  cc_l1             ; exit if len==0
-    xor    eax, eax          ; r=0
+    xchg    esi, eax          ; esi = ctx
+    pushad
+    pushad
+    mov     edi, esp          ; edi = stream[64]
 cc_l0:
-    mov    al, 64
-    cmp    ecx, eax          ; eax=len>64:64:len
-    cmovb  eax, ecx
-    call   cc20_corex
-    add    edx, eax          ; p += r;
-    sub    ecx, eax          ; len -= r;
-    jnz    cc_l0
+    xor     eax, eax
+    jecxz   cc_l2             ; exit if len==0
+    call    cc20_streamx
 cc_l1:
+    mov     dl, byte[edi+eax]
+    xor     byte[ebx+eax], dl
+    inc     eax
+    cmp     al, 64
+    loopnz  cc_l1
+    add     ebx, eax
+    jmp     cc_l0
+cc_l2:
+    popad
+    popad
     popad
     ret
-    

@@ -81,8 +81,8 @@ extern "C" {
   void cc20_setkeyx(cc20_ctx*, void*, void*);
   
   // encrypt or decrypt stream of bytes
-  void cc20_encrypt(cc20_ctx*, void*, uint32_t);
-  void cc20_encryptx(cc20_ctx*, void*, uint32_t);
+  void cc20_encrypt(uint32_t, void*, cc20_ctx*);
+  void cc20_encryptx(uint32_t, void*, cc20_ctx*);
   
 #ifdef __cplusplus
 }

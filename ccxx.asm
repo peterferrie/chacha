@@ -30,8 +30,8 @@
 ; -----------------------------------------------
 ; ChaCha20 stream cipher in x64 assembly
 ;
-; size: 273 bytes for win64
-;       261 bytes for linux (use -DNIX)
+; size: 270 bytes for win64
+;       258 bytes for linux (use -DNIX)
 ;
 ; -----------------------------------------------
 
@@ -148,21 +148,19 @@ cc20_stream:
     push    rcx
     
     push    rbx
-    push    rdi
     push    rsi
+    push    rdi
     
     ; copy state to stream buffer in rbx
-    push    rdi
-    pop     rsi
-    push    rbx
-    pop     rdi
-    push    64/4
+    push    rsi
+    pop     rbx
+    push    rdx
     pop     rcx
-    rep     movsd
+    rep     movsb
 
     ; apply 20 rounds of permutation function
-    push    rbx
     pop     rdi
+    push    rdi
     push    20/2  ; 20 rounds
     pop     rbp
 ccs_l1:
@@ -176,8 +174,8 @@ ccs_l2:
     pop     rsi  ; pointer to indexes
     mov     cl, 8
 ccs_l3:
-    movzx   eax, word[rsi]
-    add     rsi, 2
+    xor     eax, eax 
+    lodsw
     call    chacha_permute
     loop    ccs_l3
     dec     rbp
@@ -230,10 +228,8 @@ cc_l0:
 cc_l1:
     mov     dl, byte[rbx+rax]
     xor     byte[rsi+rax], dl ; p[idx] ^= stream[idx]
-    inc     al                ; idx++
-    cmp     al, 64            ; 64 bytes?
-    loopne  cc_l1             ; --len
-    add     rsi, rax          ; p += idx
+    sub     edx, 1
+    loopnz  cc_l1             ; --len
     jmp     cc_l0
 cc_l2:
     add     rsp, 64

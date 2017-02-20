@@ -64,7 +64,7 @@ int main (void) {
   }
   
   printf ("\nencrypting block\n");
-  cc20_encrypt (&ctx, input, 64);
+  cc20_encrypt (64, input, &ctx);
  
   printf ("\ncounter = %08x %08x\n", 
     ctx.s.v32[13], ctx.s.v32[12]);
@@ -81,7 +81,7 @@ int main (void) {
   
   // do 20 rounds of decryption
   cc20_setkey (&ctx, key, nonce);
-  cc20_encrypt (&ctx, input, 64);
+  cc20_encrypt (64, input, &ctx);
   
   r=memcmp (input, pt, 64)==0;
   printf ("\nDecryption test %s", r ? "passed":"failed");
