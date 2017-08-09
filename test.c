@@ -56,22 +56,22 @@ int main (void) {
   cc20_setkey (&ctx, key, nonce);
   
   printf ("\ncounter = %08x %08x\n", 
-    ctx.s.v32[13], ctx.s.v32[12]);
+    ctx.s.w[13], ctx.s.w[12]);
     
   for (i=0; i<10; i+= 2) {
     printf ("state[%02i - %02i] = 0x%08x 0x%08x\n", 
-      i, i+1, ctx.s.v32[i], ctx.s.v32[i+1]);
+      i, i+1, ctx.s.w[i], ctx.s.w[i+1]);
   }
   
   printf ("\nencrypting block\n");
   cc20_encrypt (64, input, &ctx);
  
   printf ("\ncounter = %08x %08x\n", 
-    ctx.s.v32[13], ctx.s.v32[12]);
+    ctx.s.w[13], ctx.s.w[12]);
     
   for (i=0; i<10; i+= 2) {
     printf ("state[%02i - %02i] = 0x%08x 0x%08x\n", 
-      i, i+1, ctx.s.v32[i], ctx.s.v32[i+1]);
+      i, i+1, ctx.s.w[i], ctx.s.w[i+1]);
   }
   
   r=memcmp (input, output, 64)==0;

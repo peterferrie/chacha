@@ -109,7 +109,7 @@ void cc20_stream (cc20_ctx *c, cc20_blk *x)
 // encrypt or decrypt stream of bytes
 void cc20_encrypt (uint32_t len, void *in, cc20_ctx *ctx) 
 {
-    uint32_t r;
+    uint32_t i, r;
     cc20_blk stream;
     uint8_t  *p=(uint8_t*)in;
     
