@@ -90,10 +90,10 @@ void chacha20 (uint32_t len, void *in)
 {
     w512_t  s;
     uint8_t *p=(uint8_t*)in;
-    int     r;
+    int     r, i;
     
     // if length is zero, assume initializing key  
-    if (len==0) {
+    if (len == 0) {
       // store "expand 32-byte k"
       s.w[0] = 0x61707865; s.w[1] = 0x3320646E;
       s.w[2] = 0x79622D32; s.w[3] = 0x6B206574;
@@ -104,22 +104,22 @@ void chacha20 (uint32_t len, void *in)
       // initialize counter
       s.w[12] = 0; s.w[13] = 0;
       // store nonce
-      s.w[14] = p->w[0];
-      s.w[15] = p->w[1];
-    }
-    
-    while (len) {      
-      chacha_permute(&s);
+      //s.w[14] = p->w[0];
+      //s.w[15] = p->w[1];
+    } else {    
+      while (len) {      
+        chacha_permute(&s);
+        
+        r=(len>64) ? 64 : len;
+        
+        // xor input with stream
+        for (i=0; i<r; i++) {
+          p[i] ^= s.b[i];
+        }
       
-      r=(len>64) ? 64 : len;
-      
-      // xor input with stream
-      for (i=0; i<r; i++) {
-        p[i] ^= s.b[i];
+        len -= r;
+        p += r;
       }
-    
-      len -= r;
-      p += r;
     }
 }
 
